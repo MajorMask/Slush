@@ -13,6 +13,13 @@ struct VoiceProfile {
     bool active;
 };
 
+std::string get_elevenlabs_api_key() {
+    const char* key = std::getenv("ELEVENLABS_API_KEY");
+    if (key) return std::string(key);
+    log_error(0x05, "ElevenLabs API key not found in environment");
+    return "";
+}
+
 // Demo profile for "Helsinki winter"
 VoiceProfile demo_profile = {"Helsinki winter", 0xABCDEF01, 220.0f, {0.1f,0.2f,0.3f,0.4f,0.5f,0.6f,0.7f,0.8f}, 42, 1700000000, true};
 
@@ -55,17 +62,17 @@ int match_user(const char* keyword, uint32_t voice_hash) {
 }
 
     // ElevenLabs API placeholder for speech-to-text
-    #include <vector>
-    #include <string>
-    std::string elevenlabs_speech_to_text(const std::vector<uint8_t>& audio_data) {
-        // TODO: Implement HTTP request to ElevenLabs API
-        // Return transcript string
-        return "<transcript>";
-    }
+std::string elevenlabs_speech_to_text(const std::vector<uint8_t>& audio_data) {
+    std::string api_key = get_elevenlabs_api_key();
+    // TODO: Implement HTTP request to ElevenLabs API
+    // Use api_key in Authorization header
+    // Return transcript string
+    return "<transcript>";
+}
 
-    // ElevenLabs API placeholder for text-to-speech
-    std::vector<uint8_t> elevenlabs_text_to_speech(const std::string& text) {
-        // TODO: Implement HTTP request to ElevenLabs API
-        // Return audio data
-        return std::vector<uint8_t>();
-    }
+std::vector<uint8_t> elevenlabs_text_to_speech(const std::string& text) {
+    std::string api_key = get_elevenlabs_api_key();
+    // TODO: Implement HTTP request to ElevenLabs API
+    // Use api_key in Authorization header
+    // Return audio data
+    return std::vector<uint8_t>();
