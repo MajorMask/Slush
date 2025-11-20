@@ -53,3 +53,19 @@ int match_user(const char* keyword, uint32_t voice_hash) {
     log_exit("match_user");
     return -1;
 }
+
+    // ElevenLabs API placeholder for speech-to-text
+    #include <vector>
+    #include <string>
+    std::string elevenlabs_speech_to_text(const std::vector<uint8_t>& audio_data) {
+        // TODO: Implement HTTP request to ElevenLabs API
+        // Return transcript string
+        return "<transcript>";
+    }
+
+    // ElevenLabs API placeholder for text-to-speech
+    std::vector<uint8_t> elevenlabs_text_to_speech(const std::string& text) {
+        // TODO: Implement HTTP request to ElevenLabs API
+        // Return audio data
+        return std::vector<uint8_t>();
+    }
