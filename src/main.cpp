@@ -3,10 +3,9 @@
 #include <HTTPClient.h>
 #include <ArduinoJson.h>
 
-// Configuration - UPDATE THESE!
-#define WIFI_SSID "YOUR_HACKATHON_WIFI"
-#define WIFI_PASSWORD "PASSWORD"
-#define ELEVENLABS_API_KEY "YOUR_API_KEY"
+// Replace placeholder with a header that's kept out of git
+// Create a file named "secrets.h" (add it to .gitignore) and include it here
+#include "secrets.h"
 
 // Simple demo system
 uint16_t demo_numbers[] = {42, 123, 456, 789};

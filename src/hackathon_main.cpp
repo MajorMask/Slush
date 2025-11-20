@@ -5,6 +5,7 @@
  */
 
 #include <M5Unified.h>
+#include "secrets.h"
 
 // Simple demo without APIs - works immediately!
 uint16_t demo_numbers[] = {42, 123, 456, 789, 101};
