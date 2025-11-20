@@ -1,3 +1,10 @@
+#ifdef ESP32
+#include <WiFi.h>
+#include <HTTPClient.h>
+#include <ArduinoJson.h>
+#endif
+#include <functional>
+
 // Voice processing and ElevenLabs integration
 #include "voice_processor.h"
 #include "error_handler.h"
@@ -61,18 +68,98 @@ int match_user(const char* keyword, uint32_t voice_hash) {
     return -1;
 }
 
-    // ElevenLabs API placeholder for speech-to-text
+
+// ElevenLabs API implementation for speech-to-text
 std::string elevenlabs_speech_to_text(const std::vector<uint8_t>& audio_data) {
+    log_entry("elevenlabs_speech_to_text");
+    
     std::string api_key = get_elevenlabs_api_key();
-    // TODO: Implement HTTP request to ElevenLabs API
-    // Use api_key in Authorization header
-    // Return transcript string
-    return "<transcript>";
+    if (api_key.empty()) {
+        // For hackathon: hardcode your key here
+        api_key = "YOUR_ELEVENLABS_API_KEY_HERE";
+    }
+
+#ifdef ESP32
+    HTTPClient http;
+    http.begin("https://api.elevenlabs.io/v1/speech-to-text");
+    http.addHeader("Accept", "application/json");
+    http.addHeader("xi-api-key", api_key.c_str());
+    http.addHeader("Content-Type", "audio/wav");
+    
+    int httpResponseCode = http.POST((uint8_t*)audio_data.data(), audio_data.size());
+    
+    std::string result = "";
+    if (httpResponseCode == 200) {
+        String response = http.getString();
+        
+        // Simple JSON parsing
+        int text_start = response.indexOf("\"text\":\"") + 8;
+        int text_end = response.indexOf("\"", text_start);
+        if (text_start > 7 && text_end > text_start) {
+            result = response.substring(text_start, text_end).c_str();
+            log_performance("STT_success", 1.0f);
+        }
+    } else {
+        log_error(0x01, ("STT API failed: " + std::to_string(httpResponseCode)).c_str());
+    }
+    http.end();
+#else
+    // Desktop simulation for testing
+    result = "Helsinki winter"; // Your demo keyword
+    log_performance("STT_simulation", 1.0f);
+#endif
+
+    log_exit("elevenlabs_speech_to_text");
+    return result;
 }
 
 std::vector<uint8_t> elevenlabs_text_to_speech(const std::string& text) {
+    log_entry("elevenlabs_text_to_speech");
+    
     std::string api_key = get_elevenlabs_api_key();
-    // TODO: Implement HTTP request to ElevenLabs API
-    // Use api_key in Authorization header
-    // Return audio data
-    return std::vector<uint8_t>();
+    if (api_key.empty()) {
+        api_key = "YOUR_ELEVENLABS_API_KEY_HERE"; // Hardcode for hackathon
+    }
+    
+    std::vector<uint8_t> audio_data;
+
+#ifdef ESP32
+    std::string voice_id = "21m00Tcm4TlvDq8ikWAM"; // Rachel voice
+    std::string url = "https://api.elevenlabs.io/v1/text-to-speech/" + voice_id;
+    
+    HTTPClient http;
+    http.begin(url.c_str());
+    http.addHeader("Accept", "audio/mpeg");
+    http.addHeader("Content-Type", "application/json");
+    http.addHeader("xi-api-key", api_key.c_str());
+    
+    // Create JSON payload
+    String json_payload = "{\"text\":\"" + String(text.c_str()) + 
+                         "\",\"model_id\":\"eleven_monolingual_v1\"}";
+    
+    int httpResponseCode = http.POST(json_payload);
+    
+    if (httpResponseCode == 200) {
+        WiFiClient* stream = http.getStreamPtr();
+        
+        // Read audio data
+        uint8_t buffer[512];
+        while (http.connected() && stream->available()) {
+            size_t bytes_read = stream->readBytes(buffer, sizeof(buffer));
+            audio_data.insert(audio_data.end(), buffer, buffer + bytes_read);
+        }
+        
+        log_performance("TTS_success", 1.0f);
+    } else {
+        log_error(0x01, ("TTS API failed: " + std::to_string(httpResponseCode)).c_str());
+    }
+    http.end();
+#else
+    // Desktop simulation
+    audio_data.resize(1000, 0x80); // Dummy audio
+    log_performance("TTS_simulation", 1.0f);
+#endif
+
+    log_exit("elevenlabs_text_to_speech");
+    return audio_data;
+}

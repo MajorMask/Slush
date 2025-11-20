@@ -24,3 +24,26 @@ void log_severity(int level, const char* message) {
 void log_performance(const char* metric, float value) {
      std::cout << "[PERF] " << metric << ": " << value << std::endl;
 }
+
+
+// Network retry logic
+bool retry_network_operation(std::function<bool()> operation, int max_retries = 3) {
+    log_entry("retry_network_operation");
+    
+    for (int attempt = 1; attempt <= max_retries; attempt++) {
+        if (operation()) {
+            log_exit("retry_network_operation");
+            return true;
+        }
+        
+        if (attempt < max_retries) {
+#ifdef ESP32
+            delay(1000 * attempt); // Exponential backoff
+#endif
+        }
+    }
+    
+    log_error(0x04, "All retry attempts failed");
+    log_exit("retry_network_operation");
+    return false;
+}
